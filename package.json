@@ -1,0 +1,25 @@
+{
+  "name": "bookshelf-soft-delete",
+  "version": "0.0.4",
+  "description": "Soft Delete for Bookshelf.js",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/apolishch/bookshelf-soft-delete.git"
+  },
+  "keywords": [
+    "bookshelf",
+    "orm",
+    "soft-delete"
+  ],
+  "author": "Abraham Polishchuk <apolishc@gmail.com> (https://github.com/apolishch)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apolishch/bookshelf-soft-delete/issues"
+  },
+  "homepage": "https://github.com/apolishch/bookshelf-soft-delete",
+  "dependencies": {
+    "lazy.js": "^0.4.0",
+    "bluebird": "^2.3.11"
+  }
+}
