@@ -37,7 +37,13 @@
       destroy: function () {
         if (this.soft) {
           this.set('deleted_at', new Date());
-          return this.save();
+          return this.save()
+            .tap(function (model) {
+              return model.triggerThen('destroying')
+            })
+            .then(function (model) {
+              return model.triggerThen('destroyed');
+            });
         } else {
           return mProto.destroy.apply(this, arguments);
         }
