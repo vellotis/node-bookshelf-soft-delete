@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  function shouldDisable (opts) {
+    return opts.hasOwnProperty('softDelete') && !opts.softDelete;
+  }
+
   module.exports = function (Bookshelf) {
 
     var Lazy = require('lazy.js'),
@@ -34,8 +38,8 @@
               }
             })
       },
-      destroy: function () {
-        if (this.soft) {
+      destroy: function (opts) {
+        if (this.soft && !shouldDisable(opts)) {
           this.set('deleted_at', new Date());
           return this.save()
             .tap(function (model) {
@@ -55,7 +59,7 @@
         return cProto.fetch.apply(this, arguments)
           .then(function (vanilla) {
             options = options || {};
-            if (options.force) {
+            if (shouldDisable(options)) {
               return vanilla;    
             } else {
               vanilla.models = Lazy(vanilla.models).reject(function (item) {
@@ -69,7 +73,7 @@
         return cProto.fetchOne.apply(this, arguments)
           .then(function (vanilla) {
             options = options || {};
-            if (options.force) {
+            if (shouldDisable(options)) {
               return vanilla;
             } else {
               if (vanilla && vanilla.get('deleted_at')) {
