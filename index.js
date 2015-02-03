@@ -51,6 +51,13 @@ module.exports = function (Bookshelf) {
       return mProto.fetch.apply(this, arguments);
     },
 
+    fetchAll: function (opts) {
+      if (this.soft && !shouldDisable(opts)) {
+        addDeletionCheck(this);
+      }
+      return mProto.fetchAll.apply(this, arguments);
+    },
+
     restore: function () {
       if (this.soft) {
         if (this.get('deleted_at')) {

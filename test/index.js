@@ -64,7 +64,7 @@ describe('bookshelf soft delete', function () {
           .forge()
           .fetchAll({ softDelete: false })
           .then(function (results) {
-            results.length.should.equal(0);
+            results.length.should.equal(1);
           });
       }
     );
