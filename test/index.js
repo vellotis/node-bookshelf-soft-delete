@@ -19,8 +19,12 @@ describe('bookshelf soft delete', function () {
 
   describe('A softDeleted model', function () {
     before(function () {
-      (new Model())
-        .destroy();
+      var model = Model.forge();
+      return model
+        .save()
+        .then(function () {
+          return model.destroy();
+        });
     });
 
     it('should not be visible in fetches', function () {
@@ -53,6 +57,34 @@ describe('bookshelf soft delete', function () {
         .then(function (results) {
           results.models.length.should.equal(1);
         });
+    });
+
+    describe('when restored', function () {
+      before(function () {
+        return Model
+          .forge({ id: 1 })
+          .fetch()
+          .then(function (model) {
+            return model.restore();
+          });
+      });
+
+      it('should be visible in fetches', function () {
+        return (new Collection())
+          .fetch()
+          .then(function (results) {
+            results.models.length.should.equal(1);
+          });
+      });
+
+      it('should be visible in fetchOne', function () {
+        return (new Collection())
+          .fetchOne()
+          .then(function (result) {
+            should.exist(result);
+          });
+      });
+
     });
   });
 });

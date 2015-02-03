@@ -2,6 +2,8 @@
 
 exports.up = function (knex) {
   return knex.schema.createTable('test', function (t) {
+    t.increments('id').primary();
+    t.datetime('restored_at').nullable();
     t.datetime('deleted_at').nullable();
   });
 };
