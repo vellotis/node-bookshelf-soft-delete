@@ -1,3 +1,5 @@
+'use strict';
+
 var repo = require('./repo'),
   model = require('./model');
 

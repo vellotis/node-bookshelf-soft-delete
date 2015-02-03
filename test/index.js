@@ -1,8 +1,10 @@
+'use strict';
+
 var lib = require('./lib'),
   knex = require('knex')(require('../knexfile').development),
   fs = require('fs'),
   path = require('path'),
-  Collection = lib.Collection, 
+  Collection = lib.Collection,
   should = require('should'),
   Model = lib.Model;
 

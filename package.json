@@ -18,7 +18,8 @@
     "url": "https://github.com/lanetix/node-bookshelf-soft-delete/issues"
   },
   "scripts": {
-    "test": "mocha"
+    "lint": "eslint --ignore-path .gitignore .",
+    "test": "npm run lint && mocha"
   },
   "homepage": "https://github.com/lanetix/node-bookshelf-soft-delete",
   "dependencies": {
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "bookshelf": "^0.7.9",
+    "eslint": "^0.13.0",
     "knex": "^0.7.3",
     "mocha": "^2.1.0",
     "should": "^4.6.3",
