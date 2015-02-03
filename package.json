@@ -29,6 +29,7 @@
   "devDependencies": {
     "bookshelf": "^0.7.9",
     "eslint": "^0.13.0",
+    "eslint-plugin-nodeca": "^1.0.3",
     "knex": "^0.7.3",
     "mocha": "^2.1.0",
     "should": "^4.6.3",
