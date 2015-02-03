@@ -27,6 +27,36 @@ describe('bookshelf soft delete', function () {
         });
     });
 
+    it('should not be visibile in model fetch', function () {
+      return Model
+        .forge({ id: 1 })
+        .fetch()
+        .then(function (model) {
+          should.not.exist(model);
+        });
+    });
+
+    xit('should not be visibile in model fetchAll', function () {
+    });
+
+    it(
+      'should be visibile in model fetch with softDelete: false',
+      function () {
+        return Model
+          .forge({ id: 1 })
+          .fetch({ softDelete: false })
+          .then(function (model) {
+            should.exist(model);
+          });
+      }
+    );
+
+    xit(
+      'should be visibile in model fetchAll with softDelete: false',
+      function () {
+      }
+    );
+
     it('should not be visible in fetches', function () {
       return (new Collection())
         .fetch()
@@ -63,7 +93,7 @@ describe('bookshelf soft delete', function () {
       before(function () {
         return Model
           .forge({ id: 1 })
-          .fetch()
+          .fetch({ softDelete: false })
           .then(function (model) {
             return model.restore();
           });
