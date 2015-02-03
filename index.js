@@ -12,8 +12,6 @@ module.exports = function (Bookshelf) {
   var mProto = Bookshelf.Model.prototype,
     cProto = Bookshelf.Collection.prototype;
 
-
-
   Bookshelf.Model = Bookshelf.Model.extend({
     constructor: function () {
       mProto.constructor.apply(this, arguments);
