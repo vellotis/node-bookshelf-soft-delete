@@ -21,5 +21,12 @@
   "dependencies": {
     "lazy.js": "^0.4.0",
     "bluebird": "^2.3.11"
+  },
+  "devDependencies": {
+    "bookshelf": "^0.7.9",
+    "knex": "^0.7.3",
+    "mocha": "^2.1.0",
+    "should": "^4.6.3",
+    "sqlite3": "^3.0.4"
   }
 }

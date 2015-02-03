@@ -2,7 +2,7 @@
   'use strict';
 
   function shouldDisable (opts) {
-    return opts.hasOwnProperty('softDelete') && !opts.softDelete;
+    return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
   }
 
   module.exports = function (Bookshelf) {
@@ -59,6 +59,7 @@
         return cProto.fetch.apply(this, arguments)
           .then(function (vanilla) {
             options = options || {};
+            debugger;
             if (shouldDisable(options)) {
               return vanilla;    
             } else {
