@@ -4,6 +4,10 @@ function shouldDisable (opts) {
   return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
 }
 
+function isDeleted (model) {
+  return model.get('deleted_at') && !model.get('restored_at');
+}
+
 var lazy = require('lazy.js'),
   BPromise = require('bluebird');
 
@@ -21,11 +25,19 @@ module.exports = function (Bookshelf) {
           if (!self.soft) {
             throw new BPromise.CancellationError('soft delete not set');
           } else {
-            return Bookshelf
-              .knex.schema.hasColumn(self.tableName, 'deleted_at')
-              .then(function (deletedPresence) {
+            return BPromise.all([
+              Bookshelf.knex.schema.hasColumn(self.tableName, 'deleted_at'),
+              Bookshelf.knex.schema.hasColumn(self.tableName, 'restored_at')
+            ])
+              .spread(function (deletedPresence, restoredPresence) {
+                if (!deletedPresence && !restoredPresence) {
+                  throw new BPromise.CancellationError('missing columns deleted_at & restored_at');
+                }
                 if (!deletedPresence) {
                   throw new BPromise.CancellationError('missing column deleted_at');
+                }
+                if (!restoredPresence) {
+                  throw new BPromise.CancellationError('missing column restored_at');
                 }
               });
           }
@@ -36,8 +48,23 @@ module.exports = function (Bookshelf) {
           }
         });
     },
+
+    restore: function () {
+      if (this.soft) {
+        if (this.get('deleted_at')) {
+          this.set('restored_at', new Date());
+          return this.save();
+        }
+      }
+      else {
+        throw new TypeError('restore cannont be used if the model does not ' +
+          'have soft delete enabled');
+      }
+    },
+
     destroy: function (opts) {
       if (this.soft && !shouldDisable(opts)) {
+        this.set('restored_at', null);
         this.set('deleted_at', new Date());
         return this.save()
           .tap(function (model) {
@@ -61,7 +88,7 @@ module.exports = function (Bookshelf) {
             return vanilla;
           } else {
             vanilla.models = lazy(vanilla.models).reject(function (item) {
-              return item.get('deleted_at');
+              return isDeleted(item);
             }).value();
             return vanilla;
           }
@@ -74,7 +101,7 @@ module.exports = function (Bookshelf) {
           if (shouldDisable(options)) {
             return vanilla;
           } else {
-            if (vanilla && vanilla.get('deleted_at')) {
+            if (vanilla && isDeleted(vanilla)) {
               return null;
             } else {
               return vanilla;
