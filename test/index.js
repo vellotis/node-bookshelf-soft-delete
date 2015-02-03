@@ -3,6 +3,7 @@ var lib = require('./lib'),
   fs = require('fs'),
   path = require('path'),
   Collection = lib.Collection, 
+  should = require('should'),
   Model = lib.Model;
 
 describe('bookshelf soft delete', function () {
@@ -25,6 +26,22 @@ describe('bookshelf soft delete', function () {
         .fetch()
         .then(function (results) {
           results.models.length.should.equal(0);
+        });
+    });
+
+    it('should not be visible in fetchOne', function () {
+      return (new Collection())
+        .fetchOne()
+        .then(function (result) {
+          should.not.exist(result);
+        });
+    });
+
+    it('should be be visible in softDelete: false fetchOne', function () {
+      return (new Collection())
+        .fetchOne({ softDelete: false })
+        .then(function (result) {
+          should.exist(result);
         });
     });
 
