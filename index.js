@@ -83,7 +83,10 @@ module.exports = function (Bookshelf) {
 
   Bookshelf.Collection = Bookshelf.Collection.extend({
     fetch: function (opts) {
-      if (this.model.soft && !shouldDisable(opts)) {
+      /*eslint-disable new-cap*/
+      var isSoft = (new this.model()).soft;
+      /*eslint-enable new-cap*/
+      if (isSoft && !shouldDisable(opts)) {
         addDeletionCheck(this);
       }
       return cProto.fetch.apply(this, arguments);

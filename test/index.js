@@ -36,7 +36,13 @@ describe('bookshelf soft delete', function () {
         });
     });
 
-    xit('should not be visibile in model fetchAll', function () {
+    it('should not be visibile in model fetchAll', function () {
+      return Model
+        .forge()
+        .fetchAll()
+        .then(function (results) {
+          results.length.should.equal(0);
+        });
     });
 
     it(
@@ -51,9 +57,15 @@ describe('bookshelf soft delete', function () {
       }
     );
 
-    xit(
+    it(
       'should be visibile in model fetchAll with softDelete: false',
       function () {
+        return Model
+          .forge()
+          .fetchAll({ softDelete: false })
+          .then(function (results) {
+            results.length.should.equal(0);
+          });
       }
     );
 
