@@ -18,3 +18,6 @@ On your bookshelf Model which you would like to mark for soft deletion:
     
 Please note that strictly speaking any truthy value will be sufficient.
 This will override `destroy` to simply set the `deleted_at` column of the corresponding table to the Date stamp at moment of deletion, and override the collection `fetch` and `fetchOne` to filter out model instances where `deleted_at` is set. Please note, that if you set this on a Model, the table for which does not have the `deleted_at` column, this will throw an exception.
+
+If you wish to disable soft delete for a given operation, e.g., `fetch`, simply
+pass an object with `softDelete: false` to that operation.
