@@ -5,8 +5,10 @@ function shouldDisable (opts) {
 }
 
 function addDeletionCheck (syncable) {
-  syncable.query(function () {
-    this.whereNull('deleted_at').orWhereNotNull('restored_at');
+  syncable.query(function (qb) {
+    qb.where(function () {
+      this.whereNull('deleted_at').orWhereNotNull('restored_at');
+    });
   });
 }
 
