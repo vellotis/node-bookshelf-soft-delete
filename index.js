@@ -1,10 +1,10 @@
 'use strict';
 
-function shouldDisable (opts) {
+function shouldDisable(opts) {
   return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
 }
 
-function addDeletionCheck (syncable) {
+function addDeletionCheck(syncable) {
   syncable.query(function (qb) {
     qb.where(function () {
       this.whereNull('deleted_at').orWhereNotNull('restored_at');
@@ -20,32 +20,6 @@ module.exports = function (Bookshelf) {
     cProto = Bookshelf.Collection.prototype;
 
   Bookshelf.Model = Bookshelf.Model.extend({
-    constructor: function () {
-      mProto.constructor.apply(this, arguments);
-      var tableName = this.tableName,
-        trigger = this.trigger;
-      if (this.soft) {
-        BPromise.all([
-          Bookshelf.knex.schema.hasColumn(tableName, 'deleted_at'),
-          Bookshelf.knex.schema.hasColumn(tableName, 'restored_at')
-        ])
-          .spread(function (deletedPresence, restoredPresence) {
-            if (!deletedPresence && !restoredPresence) {
-              throw new BPromise.CancellationError('missing columns deleted_at & restored_at');
-            }
-            if (!deletedPresence) {
-              throw new BPromise.CancellationError('missing column deleted_at');
-            }
-            if (!restoredPresence) {
-              throw new BPromise.CancellationError('missing column restored_at');
-            }
-          })
-          .catch(function (error) {
-            trigger('error', error);
-          });
-      }
-    },
-
     fetch: function (opts) {
       if (this.soft && !shouldDisable(opts)) {
         addDeletionCheck(this);
@@ -69,7 +43,7 @@ module.exports = function (Bookshelf) {
       }
       else {
         throw new TypeError('restore cannont be used if the model does not ' +
-          'have soft delete enabled');
+        'have soft delete enabled');
       }
     },
 
