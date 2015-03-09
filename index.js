@@ -12,8 +12,6 @@ function addDeletionCheck(syncable) {
   });
 }
 
-var BPromise = require('bluebird');
-
 module.exports = function (Bookshelf) {
 
   var mProto = Bookshelf.Model.prototype,
