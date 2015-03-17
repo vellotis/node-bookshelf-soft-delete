@@ -1,6 +1,6 @@
 {
   "name": "bookshelf-soft-delete",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Soft Delete for Bookshelf.js",
   "main": "index.js",
   "repository": {
@@ -18,8 +18,7 @@
     "url": "https://github.com/lanetix/node-bookshelf-soft-delete/issues"
   },
   "engines": {
-    "iojs": ">=1.0 <1.6",
-    "node": ">=0.10 <0.13",
+    "node": ">=0.10",
     "npm": "^2"
   },
   "scripts": {

@@ -51,10 +51,10 @@ module.exports = function (Bookshelf) {
         this.set('deleted_at', new Date());
         return this.save()
           .tap(function (model) {
-            return model.triggerThen('destroying');
+            return model.triggerThen('destroying', model, opts);
           })
           .then(function (model) {
-            return model.triggerThen('destroyed');
+            return model.triggerThen('destroyed', model, undefined, opts);
           });
       } else {
         return mProto.destroy.apply(this, arguments);
