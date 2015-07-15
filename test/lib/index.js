@@ -2,5 +2,7 @@
 
 module.exports = {
   Model: require('./model'),
-  Collection: require('./collection')
+  Model2: require('./model2'),
+  Collection: require('./collection'),
+  Collection2: require('./collection2')
 };

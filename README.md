@@ -18,6 +18,10 @@ On your bookshelf Model which you would like to mark for soft deletion:
 
     soft: true
 
+or, if you don't want to use the default column names (`deleted_at` and `restored_at`) :
+
+    soft: ['deletionDate', 'restorationDate']
+
 Please note that strictly speaking any truthy value will be sufficient.  This
 will override `destroy` to simply set the `deleted_at` column of the
 corresponding table to the Date stamp at moment of deletion, and override the
@@ -30,4 +34,4 @@ If you wish to disable soft delete for a given operation, e.g., `fetch`, simply
 pass an object with `softDelete: false` to that operation.
 
 If you need to restore something which has been soft deleted, `model.restore`
-wiil do this.
+will do this.
