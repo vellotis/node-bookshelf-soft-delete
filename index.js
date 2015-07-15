@@ -1,5 +1,7 @@
 'use strict';
 
+var softFields = ['deleted_at', 'restored_at'];
+
 function shouldDisable(opts) {
   return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
 }
@@ -7,7 +9,7 @@ function shouldDisable(opts) {
 function addDeletionCheck(syncable) {
   syncable.query(function (qb) {
     qb.where(function () {
-      this.whereNull('deleted_at').orWhereNotNull('restored_at');
+      this.whereNull(softFields[0]).orWhereNotNull(softFields[1]);
     });
   });
 }
@@ -18,6 +20,15 @@ module.exports = function (Bookshelf) {
     cProto = Bookshelf.Collection.prototype;
 
   Bookshelf.Model = Bookshelf.Model.extend({
+
+    initialize: function () {
+      if (Array.isArray(this.soft)) {
+        softFields = this.soft;
+        this.soft = true;
+      }
+      return mProto.initialize.apply(this, arguments);
+    },
+
     fetch: function (opts) {
       if (this.soft && !shouldDisable(opts)) {
         addDeletionCheck(this);
@@ -34,8 +45,8 @@ module.exports = function (Bookshelf) {
 
     restore: function () {
       if (this.soft) {
-        if (this.get('deleted_at')) {
-          this.set('restored_at', new Date());
+        if (this.get(softFields[0])) {
+          this.set(softFields[1], new Date());
           return this.save();
         }
       }
@@ -47,8 +58,8 @@ module.exports = function (Bookshelf) {
 
     destroy: function (opts) {
       if (this.soft && !shouldDisable(opts)) {
-        this.set('restored_at', null);
-        this.set('deleted_at', new Date());
+        this.set(softFields[1], null);
+        this.set(softFields[0], new Date());
         return this.save()
           .tap(function (model) {
             return model.triggerThen('destroying', model, opts);
