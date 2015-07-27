@@ -1,6 +1,6 @@
 {
   "name": "bookshelf-soft-delete",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "Soft Delete for Bookshelf.js",
   "main": "index.js",
   "repository": {
