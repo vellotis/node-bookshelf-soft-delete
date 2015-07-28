@@ -1,5 +1,6 @@
 'use strict';
 
+var softActivated = false;
 var softFields = ['deleted_at', 'restored_at'];
 
 function shouldDisable(opts) {
@@ -24,27 +25,29 @@ module.exports = function (Bookshelf) {
     initialize: function () {
       if (Array.isArray(this.soft)) {
         softFields = this.soft;
-        this.soft = true;
+        softActivated = true;
+      } else if (this.soft === true) {
+        softActivated = true;
       }
       return mProto.initialize.apply(this, arguments);
     },
 
     fetch: function (opts) {
-      if (this.soft && !shouldDisable(opts)) {
+      if (softActivated && !shouldDisable(opts)) {
         addDeletionCheck(this);
       }
       return mProto.fetch.apply(this, arguments);
     },
 
     fetchAll: function (opts) {
-      if (this.soft && !shouldDisable(opts)) {
+      if (softActivated && !shouldDisable(opts)) {
         addDeletionCheck(this);
       }
       return mProto.fetchAll.apply(this, arguments);
     },
 
     restore: function () {
-      if (this.soft) {
+      if (softActivated) {
         if (this.get(softFields[0])) {
           this.set(softFields[1], new Date());
           return this.save();
@@ -57,7 +60,7 @@ module.exports = function (Bookshelf) {
     },
 
     destroy: function (opts) {
-      if (this.soft && !shouldDisable(opts)) {
+      if (softActivated && !shouldDisable(opts)) {
         this.set(softFields[1], null);
         this.set(softFields[0], new Date());
         return this.save()
