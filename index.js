@@ -8,9 +8,21 @@ function shouldDisable(opts) {
 }
 
 function addDeletionCheck(syncable) {
+  var deletedAtField = softFields[0];
+  var restoredAtField = softFields[1];
+
+  /*eslint-disable no-underscore-dangle*/
+  if (syncable._knex) {
+    var table = syncable._knex._single.table;
+    /*eslint-enable no-underscore-dangle*/
+
+    deletedAtField = table + '.' + softFields[0];
+    restoredAtField = table + '.' + softFields[1];
+  }
+
   syncable.query(function (qb) {
     qb.where(function () {
-      this.whereNull(softFields[0]).orWhereNotNull(softFields[1]);
+      this.whereNull(deletedAtField).orWhereNotNull(restoredAtField);
     });
   });
 }
