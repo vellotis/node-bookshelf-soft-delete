@@ -6,11 +6,13 @@ var lib = require('./lib'),
   path = require('path'),
   Collection = lib.Collection,
   Collection2 = lib.Collection2,
+  Collection4 = lib.Collection4,
   should = require('should'),
   BPromise = require('bluebird'),
   Model = lib.Model,
   Model2 = lib.Model2,
-  Model3 = lib.Model3;
+  Model3 = lib.Model3,
+  Model4 = lib.Model4;
 
 describe('bookshelf soft delete', function () {
   before(function () {
@@ -19,6 +21,7 @@ describe('bookshelf soft delete', function () {
 
   describe('given a few models', function () {
     var ids;
+    var model4Ids;
 
     beforeEach(function () {
       return BPromise.all([
@@ -34,13 +37,30 @@ describe('bookshelf soft delete', function () {
           return Model3
             .forge({ model1: ids[1] })
             .save();
+        })
+        .then(function () {
+          return BPromise.all([
+            Model4.forge({ foo: 'bar', qux: 'qix' }).save(),
+            Model4.forge({ foo: 'bar' }).save(),
+            Model4.forge().save()
+          ]);
+        })
+        .then(function (models) {
+          model4Ids = models.map(function (model) {
+            return model.id;
+          });
         });
     });
 
     afterEach(function () {
       return BPromise.map(ids, function (id) {
         return Model.forge({ id: id }).destroy({ softDelete: false });
-      });
+      })
+        .then(function () {
+          return BPromise.map(model4Ids, function (id) {
+            return Model4.forge({ id: id }).destroy({ softDelete: false });
+          });
+        });
     });
 
     it('should not affect model.fetch()', function () {
@@ -65,10 +85,70 @@ describe('bookshelf soft delete', function () {
           model.id.should.equal(ids[1]);
         });
     });
+
+    it('should not affect model count with no arguments', function () {
+      return Model4
+        .count()
+        .then(function (count) {
+          count.should.equal(3);
+        });
+    });
+
+    it('should not affect model count', function () {
+      return Model4
+        .count('foo')
+        .then(function (count) {
+          count.should.equal(2);
+        });
+    });
+
+    it('should not affect count after model where', function () {
+      return Model4
+        .where({ foo: 'bar' })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+
+    it('should not affect count after model query', function () {
+      return Model4
+        .query({ where: { foo: 'bar' } })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+
+    it('should not affect collection count with no arguments', function () {
+      return (new Collection4())
+        .count()
+        .then(function (count) {
+          count.should.equal(3);
+        });
+    });
+
+    it('should not affect collection count', function () {
+      return (new Collection4())
+        .count('foo')
+        .then(function (count) {
+          count.should.equal(2);
+        });
+    });
+
+    it('should not affect count after collection query', function () {
+      return (new Collection4())
+        .query({ where: { foo: 'bar' } })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
   });
 
   describe('A softDeleted model', function () {
     var id;
+    var model4Ids;
 
     before(function () {
       var model = Model.forge();
@@ -82,6 +162,22 @@ describe('bookshelf soft delete', function () {
           return Model3
             .forge({ model1: id })
             .save();
+        })
+        .then(function () {
+          return BPromise.all([
+            Model4.forge({ foo: 'bar', qux: 'qix' }).save(),
+            Model4.forge({ foo: 'bar' }).save(),
+            Model4.forge().save()
+          ]);
+        })
+        .then(function (models) {
+          model4Ids = models.map(function (model4) {
+            return model4.id;
+          });
+
+          return BPromise.map(model4Ids, function (model4Id) {
+            return Model4.forge({ id: model4Id }).destroy();
+          });
         });
     });
 
@@ -104,6 +200,40 @@ describe('bookshelf soft delete', function () {
         .fetch()
         .then(function (model) {
           should.not.exist(model);
+        });
+    });
+
+    it('should not be visible in model count with no arguments', function () {
+      return Model4
+        .count()
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should not be visible in model count', function () {
+      return Model4
+        .count('foo')
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should not be visible in count after model where', function () {
+      return Model4
+        .where({ foo: 'bar' })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should not be visible in count after model query', function () {
+      return Model4
+        .query({ where: { foo: 'bar' } })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(0);
         });
     });
 
@@ -148,6 +278,40 @@ describe('bookshelf soft delete', function () {
         .fetch({ softDelete: false })
         .then(function (model) {
           should.exist(model);
+        });
+    });
+
+    it('should be visible in model count with no column argument and softDelete: false', function () {
+      return Model4
+        .count({ softDelete: false })
+        .then(function (count) {
+          count.should.equal(3);
+        });
+    });
+
+    it('should be visible in model count with softDelete: false', function () {
+      return Model4
+        .count('foo', { softDelete: false })
+        .then(function (count) {
+          count.should.equal(2);
+        });
+    });
+
+    it('should be visible in count with softDelete: false after model where', function () {
+      return Model4
+        .where({ foo: 'bar' })
+        .count('qux', { softDelete: false })
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+
+    it('should be visible in count with softDelete: false after model query', function () {
+      return Model4
+        .query({ where: { foo: 'bar' } })
+        .count('qux', { softDelete: false })
+        .then(function (count) {
+          count.should.equal(1);
         });
     });
 
@@ -215,6 +379,31 @@ describe('bookshelf soft delete', function () {
         });
     });
 
+    it('should not be visible in collection count with no arguments', function () {
+      return (new Collection4())
+        .count()
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should not be visible in collection count', function () {
+      return (new Collection4())
+        .count('foo')
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should not be visible in count after collection query', function () {
+      return (new Collection4())
+        .query({ where: { foo: 'bar' } })
+        .count('qux')
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
     it('should be visible in fetchOne with softDelete: false', function () {
       return (new Collection())
         .fetchOne({ softDelete: false })
@@ -257,6 +446,31 @@ describe('bookshelf soft delete', function () {
         });
     });
 
+    it('should be visible in collection count with no column argument and softDelete: false', function () {
+      return (new Collection4())
+        .count({ softDelete: false })
+        .then(function (count) {
+          count.should.equal(3);
+        });
+    });
+
+    it('should be visible in collection count with softDelete: false', function () {
+      return (new Collection4())
+        .count('foo', { softDelete: false })
+        .then(function (count) {
+          count.should.equal(2);
+        });
+    });
+
+    it('should be visible in count with softDelete: false after collection query', function () {
+      return (new Collection4())
+        .query({ where: { foo: 'bar' } })
+        .count('qux', { softDelete: false })
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+
     describe('when restored', function () {
       before(function () {
         return Model
@@ -264,6 +478,16 @@ describe('bookshelf soft delete', function () {
           .fetch({ softDelete: false })
           .then(function (model) {
             return model.restore();
+          })
+          .then(function () {
+            return BPromise.map(model4Ids, function (model4Id) {
+              return Model4
+                .forge({ id: model4Id })
+                .fetch({ softDelete: false })
+                .then(function (model4) {
+                  return model4.restore();
+                });
+            });
           });
       });
 
@@ -306,6 +530,65 @@ describe('bookshelf soft delete', function () {
           .fetchOne()
           .then(function (result) {
             should.exist(result);
+          });
+      });
+
+      it('should be visible in model count with no arguments', function () {
+        return Model4
+          .count()
+          .then(function (count) {
+            count.should.equal(3);
+          });
+      });
+
+      it('should be visible in model count', function () {
+        return Model4
+          .count('foo')
+          .then(function (count) {
+            count.should.equal(2);
+          });
+      });
+
+      it('should be visible in count after model where', function () {
+        return Model4
+          .where({ foo: 'bar' })
+          .count('qux')
+          .then(function (count) {
+            count.should.equal(1);
+          });
+      });
+
+      it('should be visible in count after model query', function () {
+        return Model4
+          .query({ where: { foo: 'bar' } })
+          .count('qux')
+          .then(function (count) {
+            count.should.equal(1);
+          });
+      });
+
+      it('should be visible in collection count with no arguments', function () {
+        return (new Collection4())
+          .count()
+          .then(function (count) {
+            count.should.equal(3);
+          });
+      });
+
+      it('should be visible in collection count', function () {
+        return (new Collection4())
+          .count('foo')
+          .then(function (count) {
+            count.should.equal(2);
+          });
+      });
+
+      it('should be visible in count after collection query', function () {
+        return (new Collection4())
+          .query({ where: { foo: 'bar' } })
+          .count('qux')
+          .then(function (count) {
+            count.should.equal(1);
           });
       });
     });
