@@ -97,6 +97,16 @@ module.exports = function (Bookshelf) {
         addDeletionCheck(this);
       }
       return cProto.fetch.apply(this, arguments);
+    },
+
+    count: function (field, opts) {
+      opts = opts || field;
+
+      if (softActivated && !shouldDisable(opts)) {
+        addDeletionCheck(this);
+      }
+
+      return cProto.count.apply(this, arguments);
     }
   });
 };

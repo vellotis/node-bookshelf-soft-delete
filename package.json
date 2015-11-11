@@ -26,7 +26,7 @@
     "bluebird": "^2.3.11"
   },
   "devDependencies": {
-    "bookshelf": "^0.7.9",
+    "bookshelf": "^0.9.1",
     "eslint": "^0.13.0",
     "eslint-plugin-nodeca": "^1.0.3",
     "knex": "^0.7.3",
