@@ -3,6 +3,6 @@
 var repository = require('./repo');
 
 module.exports = repository.Model.extend({
-  soft: true,
-  tableName: 'test4'
+  tableName: 'test5',
+  soft: ['deleted_at']
 });
