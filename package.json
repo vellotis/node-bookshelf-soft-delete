@@ -1,6 +1,6 @@
 {
   "name": "bookshelf-soft-delete",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "description": "Soft Delete for Bookshelf.js",
   "main": "index.js",
   "repository": {
@@ -18,8 +18,9 @@
     "url": "https://github.com/lanetix/node-bookshelf-soft-delete/issues"
   },
   "scripts": {
+    "test": "npm run lint && mocha",
     "lint": "eslint --ignore-path .gitignore .",
-    "test": "npm run lint && mocha"
+    "mocha": "mocha"
   },
   "homepage": "https://github.com/lanetix/node-bookshelf-soft-delete",
   "dependencies": {

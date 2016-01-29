@@ -1,30 +1,43 @@
 'use strict';
 
-var softActivated = false;
-var softFields = ['deleted_at', 'restored_at'];
-
 function shouldDisable(opts) {
   return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
 }
 
-function addDeletionCheck(syncable) {
+function addDeletionCheck(softFields) {
   var deletedAtField = softFields[0];
   var restoredAtField = softFields[1];
 
   /*eslint-disable no-underscore-dangle*/
-  if (syncable._knex) {
-    var table = syncable._knex._single.table;
+  if (this._knex) {
+    var table = this._knex._single.table;
     /*eslint-enable no-underscore-dangle*/
 
     deletedAtField = table + '.' + softFields[0];
     restoredAtField = table + '.' + softFields[1];
   }
 
-  syncable.query(function (qb) {
+  this.query(function (qb) {
     qb.where(function () {
-      this.whereNull(deletedAtField).orWhereNotNull(restoredAtField);
+      var query = this.whereNull(deletedAtField);
+      if (softFields[1]) {
+        query.orWhereNotNull(restoredAtField);
+      }
     });
   });
+}
+
+function setSoftDeleteOptions(soft) {
+  if (Array.isArray(soft)) {
+    this.softFields = soft;
+    this.softActivated = true;
+  } else if (soft === true) {
+    this.softFields = ['deleted_at', 'restored_at'];
+    this.softActivated = true;
+  } else {
+    this.softFields = false;
+    this.softActivated = null;
+  }
 }
 
 module.exports = function (Bookshelf) {
@@ -35,51 +48,49 @@ module.exports = function (Bookshelf) {
   Bookshelf.Model = Bookshelf.Model.extend({
 
     initialize: function () {
-      if (Array.isArray(this.soft)) {
-        softFields = this.soft;
-        softActivated = true;
-      } else if (this.soft === true) {
-        softActivated = true;
-      }
+      setSoftDeleteOptions.call(this, this.soft);
       return mProto.initialize.apply(this, arguments);
     },
 
     fetch: function (opts) {
-      if (softActivated && !shouldDisable(opts)) {
-        addDeletionCheck(this);
+      if (this.softActivated && !shouldDisable(opts)) {
+        addDeletionCheck.call(this, this.softFields);
       }
       return mProto.fetch.apply(this, arguments);
     },
 
-    fetchAll: function (opts) {
-      if (softActivated && !shouldDisable(opts)) {
-        addDeletionCheck(this);
-      }
-      return mProto.fetchAll.apply(this, arguments);
-    },
-
     restore: function () {
-      if (softActivated) {
-        if (this.get(softFields[0])) {
-          this.set(softFields[1], new Date());
+      if (this.softActivated) {
+        if (this.get(this.softFields[0])) {
+          if (this.softFields[1]) {
+            // Set restored_at
+            this.set(this.softFields[1], new Date());
+          } else {
+            // If restored_at does not exist, remove the deleted_at
+            this.set(this.softFields[0], null);
+          }
           return this.save();
         }
       }
       else {
-        throw new TypeError('restore cannont be used if the model does not ' +
+        throw new TypeError('restore can not be used if the model does not ' +
         'have soft delete enabled');
       }
     },
 
     destroy: function (opts) {
-      if (softActivated && !shouldDisable(opts)) {
-        this.set(softFields[1], null);
-        this.set(softFields[0], new Date());
-        return this.save()
-          .tap(function (model) {
-            return model.triggerThen('destroying', model, opts);
+      if (this.softActivated && !shouldDisable(opts)) {
+        var model = this;
+        var softFields = model.softFields;
+        return model.triggerThen('destroying', model, opts)
+          .then(function () {
+            if (softFields[1]) {
+              model.set(softFields[1], null);
+            }
+            model.set(softFields[0], new Date());
+            return model.save();
           })
-          .then(function (model) {
+          .then(function () {
             return model.triggerThen('destroyed', model, undefined, opts);
           });
       } else {
@@ -90,11 +101,11 @@ module.exports = function (Bookshelf) {
 
   Bookshelf.Collection = Bookshelf.Collection.extend({
     fetch: function (opts) {
-      /*eslint-disable new-cap*/
-      var isSoft = (new this.model()).soft;
-      /*eslint-enable new-cap*/
-      if (isSoft && !shouldDisable(opts)) {
-        addDeletionCheck(this);
+      var modelOpts = {};
+      setSoftDeleteOptions.call(modelOpts, this.model.prototype.soft);
+
+      if (modelOpts.softActivated && !shouldDisable(opts)) {
+        addDeletionCheck.call(this, modelOpts.softFields);
       }
       return cProto.fetch.apply(this, arguments);
     },
@@ -102,8 +113,11 @@ module.exports = function (Bookshelf) {
     count: function (field, opts) {
       opts = opts || field;
 
-      if (softActivated && !shouldDisable(opts)) {
-        addDeletionCheck(this);
+      var modelOpts = {};
+      setSoftDeleteOptions.call(modelOpts, this.model.prototype.soft);
+
+      if (modelOpts.softActivated && !shouldDisable(opts)) {
+        addDeletionCheck.call(this, modelOpts.softFields);
       }
 
       return cProto.count.apply(this, arguments);

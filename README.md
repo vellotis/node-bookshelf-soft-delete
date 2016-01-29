@@ -22,16 +22,23 @@ or, if you don't want to use the default column names (`deleted_at` and `restore
 
     soft: ['deletionDate', 'restorationDate']
 
+or, if you don't want to use `restored_at` column :
+
+    soft: ['deleted_at']
+
 Please note that strictly speaking any truthy value will be sufficient.  This
 will override `destroy` to simply set the `deleted_at` column of the
 corresponding table to the Date stamp at moment of deletion, and override the
 collection `fetch` and `fetchOne` to filter out model instances where
 `deleted_at` is set. Please note, that if you set this on a Model, the table
-for which does not have a `deleted_at` column or a `restored_at` column, an
+for which does not have a `deleted_at` column or an optional `restored_at` column, an
  `error` event will be emited when your model is created.
 
 If you wish to disable soft delete for a given operation, e.g., `fetch`, simply
 pass an object with `softDelete: false` to that operation.
+
+    YourModel.where("id", searchId)
+        .fetch({softDelete: false})
 
 If you need to restore something which has been soft deleted, `model.restore`
 will do this.

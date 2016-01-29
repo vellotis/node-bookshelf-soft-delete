@@ -12,10 +12,16 @@ var lib = require('./lib'),
   Model = lib.Model,
   Model2 = lib.Model2,
   Model3 = lib.Model3,
-  Model4 = lib.Model4;
+  Model4 = lib.Model4,
+  Model5 = lib.Model5;
 
 describe('bookshelf soft delete', function () {
   before(function () {
+    try {
+      // delete if exists, we want to do this before the tests
+      // if we delete after, can't use file for debugging
+      fs.unlinkSync(path.join(__dirname, '../dev.sqlite3'));
+    } catch (e) {}
     return knex.migrate.latest();
   });
 
@@ -596,10 +602,6 @@ describe('bookshelf soft delete', function () {
 });
 
 describe('bookshelf soft delete with named fields', function () {
-  after(function () {
-    fs.unlinkSync(path.join(__dirname, '../dev.sqlite3'));
-  });
-
   describe('given a few models', function () {
     var ids;
 
@@ -889,6 +891,147 @@ describe('bookshelf soft delete with named fields', function () {
           .fetchOne()
           .then(function (result) {
             should.exist(result);
+          });
+      });
+    });
+  });
+});
+
+describe('bookshelf Model5 without restored at', function () {
+  describe('when is not deleted', function () {
+    var modelId;
+
+    before(function () {
+      return Model5.forge().save().then(function (model) {
+        modelId = model.id;
+      });
+    });
+
+    after(function () {
+      return Model5
+        .forge({ id: modelId })
+        .destroy({softDelete: false });
+    });
+
+    it('should be visible in model fetch', function () {
+      return Model5
+        .forge({ id: modelId })
+        .fetch()
+        .then(function (model) {
+          should.exist(model);
+        });
+    });
+
+    it('should be visible in model fetchAll', function () {
+      return Model5
+        .forge()
+        .fetchAll()
+        .then(function (results) {
+          results.length.should.equal(1);
+        });
+    });
+
+    it('should be visible in collection count', function () {
+      return Model5
+        .count()
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+  });
+
+  describe('when is deleted', function () {
+    var modelId;
+
+    before(function () {
+      return Model5.forge().save().then(function (model) {
+        model.destroy();
+        modelId = model.id;
+      });
+    });
+
+    it('should not be visible in model fetchAll', function () {
+      return Model5
+        .forge()
+        .fetchAll()
+        .then(function (results) {
+          results.length.should.equal(0);
+        });
+    });
+
+    it('should be visible in model fetchAll with softDelete: false', function () {
+      return Model5
+        .forge()
+        .fetchAll({softDelete: false })
+        .then(function (results) {
+          results.at(0).get('id').should.equal(modelId);
+        });
+    });
+
+    it('should not be visible in model fetch', function () {
+      return Model5
+        .forge({ id: modelId })
+        .fetch()
+        .then(function (model) {
+          should.not.exist(model);
+        });
+    });
+
+    it('should be visible in model fetch with softDelete: false', function () {
+      return Model5
+        .forge({ id: modelId })
+        .fetch({softDelete: false })
+        .then(function (model) {
+          should.exist(model);
+        });
+    });
+
+    it('should be invisible in collection count', function () {
+      return Model5
+        .count()
+        .then(function (count) {
+          count.should.equal(0);
+        });
+    });
+
+    it('should be visible in collection count with softDelete: false', function () {
+      return Model5
+        .count({softDelete: false })
+        .then(function (count) {
+          count.should.equal(1);
+        });
+    });
+
+    describe('when restored', function () {
+      before(function () {
+        return Model5
+          .forge({ id: modelId })
+          .fetch({softDelete: false })
+          .then(function (model) {
+            model.restore();
+          });
+      });
+      it('should become visible in model fetch', function () {
+        return Model5
+          .forge({ id: modelId })
+          .fetch()
+          .then(function (model) {
+            should.exist(model);
+          });
+      });
+      it('should become visible in collection count', function () {
+        return Model5
+          .count()
+          .then(function (count) {
+            count.should.equal(1);
+          });
+      });
+      it('should become visible in model fetchAll', function () {
+        return Model5
+          .forge()
+          .fetchAll()
+          .then(function (results) {
+            results.at(0).get('id').should.equal(modelId);
           });
       });
     });
