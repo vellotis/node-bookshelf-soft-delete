@@ -10,7 +10,7 @@ deleted to an end user, but will not in fact be removed from the database.
 Then in your bookshelf configuration:
 
     var bookshelf = require('bookshelf')(knex);
-    bookshelf.plugin(require('bookshelf-soft-delete');
+    bookshelf.plugin(require('bookshelf-soft-delete'));
 
 ## Usage
 
