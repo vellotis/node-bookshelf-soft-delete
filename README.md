@@ -42,3 +42,23 @@ pass an object with `softDelete: false` to that operation.
 
 If you need to restore something which has been soft deleted, `model.restore`
 will do this.
+
+### Usage with a custom initialize function
+
+This package has an initialize function that wires everthing up. If you declare a custom initialize function, you need to make sure to call the initialize function on the prototype from the custom initialize function in order for everything to work properly.
+
+    var repository = require('./repo');
+
+    module.exports = repository.Model.extend({
+      tableName: 'users',
+      soft: true,
+
+      initialize: function() {
+        this.on('saving', this.validate);
+        repository.Model.prototype.initialize.apply(this, arguments);
+      },
+
+      validate: function() {
+        ...
+      }
+    });
