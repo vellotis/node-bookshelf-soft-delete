@@ -4,15 +4,25 @@ function shouldDisable(opts) {
   return opts && opts.hasOwnProperty('softDelete') && !opts.softDelete;
 }
 
-function addDeletionCheck(softFields) {
+function addDeletionCheck(softFields, opts) {
   var deletedAtField = softFields[0];
   var restoredAtField = softFields[1];
 
   /*eslint-disable no-underscore-dangle*/
+  var table;
+
   if (this._knex) {
-    var table = this._knex._single.table;
+    table = this._knex._single.table;
     /*eslint-enable no-underscore-dangle*/
 
+  } else if (opts.forceTableName) {
+    table = this.tableName;
+    if (typeof table === 'function') {
+      table = table.call(this);
+    }
+  }
+
+  if (table) {
     deletedAtField = table + '.' + softFields[0];
     restoredAtField = table + '.' + softFields[1];
   }
@@ -40,7 +50,10 @@ function setSoftDeleteOptions(soft) {
   }
 }
 
-module.exports = function (Bookshelf) {
+module.exports = function (Bookshelf, softOpts) {
+
+  if (softOpts === undefined) { softOpts = {}; }
+  if (!softOpts.forceTableName) { softOpts.forceTableName = false; }
 
   var mProto = Bookshelf.Model.prototype,
     cProto = Bookshelf.Collection.prototype;
@@ -54,7 +67,7 @@ module.exports = function (Bookshelf) {
 
     fetch: function (opts) {
       if (this.softActivated && !shouldDisable(opts)) {
-        addDeletionCheck.call(this, this.softFields);
+        addDeletionCheck.call(this, this.softFields, softOpts);
       }
       return mProto.fetch.apply(this, arguments);
     },
@@ -105,7 +118,7 @@ module.exports = function (Bookshelf) {
       setSoftDeleteOptions.call(modelOpts, this.model.prototype.soft);
 
       if (modelOpts.softActivated && !shouldDisable(opts)) {
-        addDeletionCheck.call(this, modelOpts.softFields);
+        addDeletionCheck.call(this, modelOpts.softFields, softOpts);
       }
       return cProto.fetch.apply(this, arguments);
     },
@@ -117,7 +130,7 @@ module.exports = function (Bookshelf) {
       setSoftDeleteOptions.call(modelOpts, this.model.prototype.soft);
 
       if (modelOpts.softActivated && !shouldDisable(opts)) {
-        addDeletionCheck.call(this, modelOpts.softFields);
+        addDeletionCheck.call(this, modelOpts.softFields, softOpts);
       }
 
       return cProto.count.apply(this, arguments);
